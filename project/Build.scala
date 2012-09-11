@@ -17,8 +17,8 @@ object Plugin extends Build {
     shellPrompt := ShellPrompt.buildShellPrompt,
     parallelExecution in Test := false,
 
-    // Use when developing against play master
-    // resolvers += Resolver.file("Local Play Repository", file(Path.userHome.absolutePath + "/Lib/play2/repository/local"))(Resolver.ivyStylePatterns),
+    // Use when developing against a locally built play master
+    resolvers += Resolver.file("Local Play Repository", file(Path.userHome.absolutePath + "/Lib/play2/repository/local"))(Resolver.ivyStylePatterns),
 
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.4",
@@ -43,10 +43,6 @@ object Publish {
     pomIncludeRepository := { _ => false },
     licenses := Seq("Apache 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
     homepage := Some(url("https://github.com/digiplant/play-res")),
-    pomPostProcess := {
-      (pomXML: scala.xml.Node) =>
-        PomPostProcessor(pomXML)
-    },
     pomExtra := (
       <scm>
         <url>git://github.com/digiplant/play-res.git</url>
@@ -60,33 +56,6 @@ object Publish {
           </developer>
         </developers>)
   )
-}
-
-object PomPostProcessor {
-  import scala.xml._
-
-  // see https://groups.google.com/d/topic/simple-build-tool/pox4BwWshtg/discussion
-  // adding a post pom processor to make sure that pom for salat-core correctly specifies depdency type pom for casbah dependency
-
-  def apply(pomXML: Node): Node = {
-    def rewrite(pf: PartialFunction[Node, Node])(ns: Seq[Node]): Seq[Node] = for (subnode <- ns) yield subnode match {
-      case e: Elem =>
-        if (pf isDefinedAt e) pf(e)
-        else Elem(e.prefix, e.label, e.attributes, e.scope, rewrite(pf)(e.child): _*)
-      case other => other
-    }
-
-    val rule: PartialFunction[Node, Node] = {
-      case e @ Elem(prefix, "dependency", attribs, scope, children @ _*) => {
-        if (children.contains(<groupId>org.mongodb</groupId>)) {
-          Elem(prefix, "dependency", attribs, scope, children ++ <type>pom</type>: _*)
-        }
-        else e
-      }
-    }
-
-    rewrite(rule)(pomXML.theSeq)(0)
-  }
 }
 
 // Shell prompt which show the current project, git branch and build version
@@ -105,7 +74,7 @@ object ShellPrompt {
     (state: State) => {
       val currProject = Project.extract (state).currentProject.id
       "%s:%s:%s> ".format (
-        currProject, currBranch, ResBuild.buildVersion
+        currProject, currBranch, Plugin.buildVersion
       )
     }
   }
