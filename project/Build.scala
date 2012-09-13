@@ -4,7 +4,7 @@ import Keys._
 object Plugin extends Build {
 
   lazy val buildVersion = "0.1-SNAPSHOT"
-  lazy val playVersion = "2.1-SNAPSHOT"
+  lazy val playVersion = "2.1-09092012"
 
   lazy val res = Project(
     id = "play-res",
