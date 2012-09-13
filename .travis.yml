@@ -2,7 +2,7 @@ language: scala
 scala:
   - 2.9.2
 
-before_install: ./travis-sbt-012.sh
+before_install: "sudo ./travis-sbt-012.sh"
 
 script: "sbt ++2.9.2 test"
 
