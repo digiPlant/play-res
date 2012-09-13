@@ -21,7 +21,19 @@ public abstract class ResourceBase extends Model {
 
     public String mimetype;
 
-    private File file;
+    protected File file = null;
+    public File getFile() {
+        if (file == null) {
+            file = Resource.get(filename, source);
+        }
+        return file;
+    }
+
+    protected ResourceBase() {}
+
+    public ResourceBase(String filename) {
+        this.filename = filename;
+    }
 
     public ResourceBase(File file, String source) {
         this.source = source;
@@ -30,9 +42,7 @@ public abstract class ResourceBase extends Model {
     }
 
     public ResourceBase(File file) {
-        this.source = "default";
-        this.file = file;
-        this.mimetype = Scala.orNull(play.api.libs.MimeTypes.forExtension(filename));
+        this(file, "default");
     }
 
     public String extension() {

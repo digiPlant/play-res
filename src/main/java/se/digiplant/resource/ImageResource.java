@@ -1,39 +1,51 @@
 package se.digiplant.resource;
 
+import com.google.common.base.Joiner;
+import org.apache.commons.lang3.ArrayUtils;
+
+import javax.imageio.ImageIO;
+import javax.persistence.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 
+@Entity
+@DiscriminatorValue("image")
 public class ImageResource extends ResourceBase {
 
-    public ImageResource(File file) {
+    public ImageResource() {}
 
-        /*String[] imageTypes = new String[]{"jpg", "jpeg", "gif", "png"};
-        for( String type: imageTypes ){
-            if( fileType.equals(type) ) return true;
+    public ImageResource(File file, String source) throws IllegalArgumentException {
+        super(file, source);
+
+        String[] imageTypes = new String[]{"jpg", "jpeg", "gif", "png"};
+
+        if (!ArrayUtils.contains(imageTypes, extension())) {
+            throw new IllegalArgumentException("File must be of the following type: " + Joiner.on(",").join(imageTypes));
         }
+    }
 
-        @Transient
-        public boolean isImageType(){
-            if( fileType == null ) return false;
-            String[] imageTypes = new String[]{"jpg", "jpeg", "gif", "png"};
-            for( String type: imageTypes ){
-                if( fileType.equals(type) ) return true;
-            }
-            return false;
-        }*/
+    public void calculateImageSize() {
+        BufferedImage source = null;
+        try {
+            source = ImageIO.read(file);
+            this.width = source.getWidth();
+            this.height = source.getHeight();
+        } catch(Exception ex){}
+        finally {
+            source = null;
+        }
+    }
 
-        super(file);
+    @Override
+    public void save() {
+        calculateImageSize();
+        super.save();
+    }
 
-        /*if (extension()) {
-            BufferedImage source = null;
-            try {
-                source = ImageIO.read(file);
-                this.width = source.getWidth();
-                this.height = source.getHeight();
-            } catch(Exception ex){}
-            finally {
-                source = null;
-            }
-        }*/
+    @Override
+    public void update() {
+        calculateImageSize();
+        super.update();
     }
 
     public int width;

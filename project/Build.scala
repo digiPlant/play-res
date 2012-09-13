@@ -7,15 +7,17 @@ object Plugin extends Build {
   lazy val playVersion = "2.1-SNAPSHOT"
 
   lazy val res = Project(
-    id = "res",
+    id = "play-res",
     base = file("."),
     settings = Project.defaultSettings ++ Publish.settings ++ Ls.settings
   ).settings(
     organization := "se.digiplant",
     version := buildVersion,
     scalaVersion := "2.9.2",
-    shellPrompt := ShellPrompt.buildShellPrompt,
+    testFrameworks += TestFrameworks.Specs2,
     parallelExecution in Test := false,
+    shellPrompt := ShellPrompt.buildShellPrompt,
+    crossScalaVersions := Seq("2.9.1", "2.9.2"),
 
     // Use when developing against a locally built play master
     resolvers += Resolver.file("Local Play Repository", file(Path.userHome.absolutePath + "/Lib/play2/repository/local"))(Resolver.ivyStylePatterns),
@@ -23,8 +25,9 @@ object Plugin extends Build {
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.4",
       "commons-codec" % "commons-codec" % "1.6",
-      "play" %% "play" % playVersion,
-      "play" %% "play-test" % playVersion % "test"
+      "play" %% "play" % playVersion % "provided",
+      "play" %% "play-test" % playVersion % "test",
+      "org.specs2" %% "specs2" % "1.12.1" % "test"
     )
   )
 }
