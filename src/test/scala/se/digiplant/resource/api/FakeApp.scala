@@ -6,6 +6,7 @@ import play.api.test._
 import play.api.test.Helpers._
 import java.io.File
 import org.apache.commons.io.FileUtils
+import util.Random
 
 trait FakeApp extends Around with Scope with FileSystemScope {
 
@@ -33,12 +34,12 @@ trait FakeApp extends Around with Scope with FileSystemScope {
 trait FileSystemScope extends Scope {
   val tmp = new File("tmp")
   val logo = new File("src/test/resources/digiPlant.jpg")
-  var testFile = new File("tmp/digiPlant.jpg")
 
   def getTestFile(): File = {
     tmp.mkdir()
-    FileUtils.copyFile(logo, testFile)
-    testFile
+    val tmpFile = new File("tmp", Random.nextString(10) + ".jpg")
+    FileUtils.copyFile(logo, tmpFile)
+    tmpFile
   }
 }
 
