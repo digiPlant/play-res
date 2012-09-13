@@ -4,7 +4,7 @@ import Keys._
 object Plugin extends Build {
 
   lazy val buildVersion = "0.1-SNAPSHOT"
-  lazy val playVersion = "2.1-09092012"
+  lazy val playVersion = "2.1-SNAPSHOT"
 
   lazy val res = Project(
     id = "play-res",
@@ -23,6 +23,7 @@ object Plugin extends Build {
 
     // Use when developing against a locally built play master
     resolvers += Resolver.file("Local Play Repository", file(Path.userHome.absolutePath + "/Lib/play2/repository/local"))(Resolver.ivyStylePatterns),
+    resolvers += "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots/",
 
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.4",
