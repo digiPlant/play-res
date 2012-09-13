@@ -23,6 +23,7 @@ object Plugin extends Build {
 
     // Use when developing against a locally built play master
     resolvers += Resolver.file("Local Play Repository", file(Path.userHome.absolutePath + "/Lib/play2/repository/local"))(Resolver.ivyStylePatterns),
+    resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
     resolvers += "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots/",
 
     libraryDependencies ++= Seq(
