@@ -13,11 +13,13 @@ object Plugin extends Build {
   ).settings(
     organization := "se.digiplant",
     version := buildVersion,
-    scalaVersion := "2.9.2",
-    testFrameworks += TestFrameworks.Specs2,
-    parallelExecution in Test := false,
     shellPrompt := ShellPrompt.buildShellPrompt,
-    crossScalaVersions := Seq("2.9.1", "2.9.2"),
+    scalaVersion := "2.9.2",
+
+    //crossScalaVersions := Seq("2.9.1", "2.9.2"),
+
+    testFrameworks += TestFrameworks.Specs2,
+    //parallelExecution in Test := false,
 
     // Use when developing against a locally built play master
     resolvers += Resolver.file("Local Play Repository", file(Path.userHome.absolutePath + "/Lib/play2/repository/local"))(Resolver.ivyStylePatterns),
