@@ -74,4 +74,14 @@ public class Resource {
     public static boolean delete(String fileuid) {
         return delete(fileuid, "default");
     }
+
+    /**
+     * Retrieves a file with the specified filepath and if specified all meta attributes
+     * @param filePath The filepath relative to the play app, it can also include the meta if you don't want to specify it separately
+     * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+     * @return File or null
+     */
+    public static File fileWithMeta(String filePath, List<String> meta) {
+        return orNull(se.digiplant.resource.api.Resource.fileWithMeta(filePath, toSeq(meta), play.api.Play.unsafeApplication()));
+    }
 }

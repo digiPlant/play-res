@@ -3,11 +3,12 @@ package se.digiplant.resource.api
 import play.api._
 import play.api.mvc._
 import play.api.libs._
-
 import org.joda.time.format.{DateTimeFormatter, DateTimeFormat}
 import org.joda.time.DateTimeZone
 import collection.JavaConverters._
 import java.io.File
+
+import play.api.Play.current
 
 object Resources extends Controller {
 
@@ -27,56 +28,54 @@ object Resources extends Controller {
 
   private val parsableTimezoneCode = " " + timeZoneCode
 
-  def at(file: String, source: String = "default")(implicit app: Application): Action[AnyContent] = Action {
-    request =>
+  def at(file: String, source: String = "default"): Action[AnyContent] = Action { request =>
 
-      def parseDate(date: String): Option[java.util.Date] = {
-        try {
-          //jodatime does not parse timezones, so we handle that manually
-          val d = dfp.parseDateTime(date.replace(parsableTimezoneCode, "")).toDate
-          Some(d)
-        } catch {
-          case _: Exception => None
-        }
+    def parseDate(date: String): Option[java.util.Date] = {
+      try {
+        //jodatime does not parse timezones, so we handle that manually
+        val d = dfp.parseDateTime(date.replace(parsableTimezoneCode, "")).toDate
+        Some(d)
+      } catch {
+        case _: Exception => None
       }
+    }
 
-      Resource.get(file, source).map {
-        file =>
-          request.headers.get(IF_NONE_MATCH).flatMap {
-            ifNoneMatch =>
-              etagFor(file).filter(_ == ifNoneMatch)
-          }.map(_ => NotModified).getOrElse {
-            request.headers.get(IF_MODIFIED_SINCE).flatMap(parseDate).flatMap {
-              ifModifiedSince =>
-                lastModifiedFor(file).flatMap(parseDate).filterNot(lastModified => lastModified.after(ifModifiedSince))
-            }.map(_ => NotModified.withHeaders(
-              DATE -> df.print({
-                new java.util.Date
-              }.getTime)
-            )).getOrElse {
+    Resource.get(file, source).map { file =>
+      request.headers.get(IF_NONE_MATCH).flatMap {
+        ifNoneMatch =>
+          etagFor(file).filter(_ == ifNoneMatch)
+      }.map(_ => NotModified).getOrElse {
+        request.headers.get(IF_MODIFIED_SINCE).flatMap(parseDate).flatMap {
+          ifModifiedSince =>
+            lastModifiedFor(file).flatMap(parseDate).filterNot(lastModified => lastModified.after(ifModifiedSince))
+        }.map(_ => NotModified.withHeaders(
+          DATE -> df.print({
+            new java.util.Date
+          }.getTime)
+        )).getOrElse {
 
-              val response = Ok.sendFile(file, inline = true)
+          val response = Ok.sendFile(file, inline = true)
 
-              // Add Etag if we are able to compute it
-              val taggedResponse = etagFor(file).map(etag => response.withHeaders(ETAG -> etag)).getOrElse(response)
-              val lastModifiedResponse = lastModifiedFor(file).map(lastModified => taggedResponse.withHeaders(LAST_MODIFIED -> lastModified)).getOrElse(taggedResponse)
+          // Add Etag if we are able to compute it
+          val taggedResponse = etagFor(file).map(etag => response.withHeaders(ETAG -> etag)).getOrElse(response)
+          val lastModifiedResponse = lastModifiedFor(file).map(lastModified => taggedResponse.withHeaders(LAST_MODIFIED -> lastModified)).getOrElse(taggedResponse)
 
-              // Add Cache directive if configured
+          // Add Cache directive if configured
 
-              /*val cachedResponse = lastModifiedResponse.withHeaders(CACHE_CONTROL -> {
-                Play.mode match {
-                  case Mode.Prod => Play.configuration.getString("assets.defaultCache").getOrElse("max-age=3600")
-                  case _ => "no-cache"
-                })
-              })*/
+          /*val cachedResponse = lastModifiedResponse.withHeaders(CACHE_CONTROL -> {
+            Play.mode match {
+              case Mode.Prod => Play.configuration.getString("assets.defaultCache").getOrElse("max-age=3600")
+              case _ => "no-cache"
+            })
+          })*/
 
-              lastModifiedResponse
+          lastModifiedResponse
 
-            }: Result
-          }
-      } getOrElse {
-        NotFound
+        }: Result
       }
+    } getOrElse {
+      NotFound
+    }
   }
 
   // Last modified

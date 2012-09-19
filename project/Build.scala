@@ -19,19 +19,22 @@ object Plugin extends Build {
     //crossScalaVersions := Seq("2.9.1", "2.9.2"),
 
     testFrameworks += TestFrameworks.Specs2,
-    //parallelExecution in Test := false,
+    parallelExecution in Test := false,
 
     // Use when developing against a locally built play master
-    resolvers += Resolver.file("Local Play Repository", file(Path.userHome.absolutePath + "/Lib/play2/repository/local"))(Resolver.ivyStylePatterns),
-    resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
-    resolvers += "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots/",
+    resolvers ++= Seq(
+      Resolver.file("Local Play Repository", file(Path.userHome.absolutePath + "/Lib/play2/repository/local"))(Resolver.ivyStylePatterns),
+      "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
+      "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots/",
+      "Sonatype Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots"
+    ),
 
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % "2.4",
       "commons-codec" % "commons-codec" % "1.6",
       "play" %% "play" % playVersion % "provided",
       "play" %% "play-test" % playVersion % "test",
-      "org.specs2" %% "specs2" % "1.12.1" % "test"
+      "org.specs2" %% "specs2" % "1.12.2-SNAPSHOT" % "test"
     )
   )
 }

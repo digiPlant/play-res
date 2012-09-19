@@ -86,4 +86,46 @@ class ResourcePlugin(app: Application) extends Plugin {
 
   private def hashAsDirectories(hash: String): String = hash.substring(0, 4) + '/' + hash.substring(4, 8)
 
+  /**
+   * Retrieves a file with the specified filepath and if specified all meta attributes
+   * @param filePath The filepath relative to the play app, it can also include the meta if you don't want to specify it separately
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @return Option[File]
+   */
+  def fileWithMeta(filePath: String, meta: Seq[String] = Seq.empty): Option[File] = {
+    val path = FilenameUtils.getPath(filePath)
+    val name = FilenameUtils.getBaseName(filePath)
+    val ext = FilenameUtils.getExtension(filePath)
+    app.getExistingFile(path + name + meta.mkString(if (!meta.isEmpty) { "_" } else "", "_", ".") + ext)
+  }
+
+  /**
+   * Puts a file into the supplied source
+   * @param file A file to be stored
+   * @param filePath The filepath relative to the play app
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @return The unique filePath with the metadata appended
+   */
+  def saveWithMeta(file: File, filePath: String, meta: Seq[String] = Seq.empty): String = {
+
+    val path = FilenameUtils.getPath(filePath)
+    val name = FilenameUtils.getBaseName(filePath)
+    val ext = FilenameUtils.getExtension(filePath)
+
+    val base = app.getFile(path)
+    if (!base.exists()) {
+      base.mkdirs()
+    }
+
+    val targetPath = path + name + meta.mkString(if (!meta.isEmpty) { "_" } else "", "_", ".") + ext
+    val target = app.getFile(targetPath)
+    if (target.exists()) {
+      FileUtils.copyFile(file, target)
+    } else {
+      FileUtils.moveFile(file, target)
+    }
+
+    targetPath
+  }
+
 }

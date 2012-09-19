@@ -8,7 +8,7 @@ object Resource {
   private def resourceAPI(implicit app: Application): ResourcePlugin = {
     app.plugin[ResourcePlugin] match {
       case Some(plugin) => plugin
-      case None => throw new Exception("The Resource Plugin is not registered in conf/play.plugins")
+      case None => sys.error("The Resource Plugin is not registered in conf/play.plugins")
     }
   }
 
@@ -44,5 +44,26 @@ object Resource {
    */
   def delete(fileuid: String, source: String = "default", meta: Seq[String] = Seq.empty)(implicit app: Application): Boolean = {
     resourceAPI.delete(fileuid, source, meta)
+  }
+
+  /**
+   * Retrieves a file with the specified filepath and if specified all meta attributes
+   * @param filePath The filepath relative to the play app, it can also include the meta if you don't want to specify it separately
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @return Option[File]
+   */
+  def fileWithMeta(filePath: String, meta: Seq[String] = Seq.empty)(implicit app: Application): Option[File] = {
+    resourceAPI.fileWithMeta(filePath, meta)
+  }
+
+  /**
+   * Puts a file into the supplied source
+   * @param file A file to be stored
+   * @param filePath The filepath relative to the play app
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @return The unique filePath with the metadata appended
+   */
+  def saveWithMeta(file: File, filePath: String, meta: Seq[String] = Seq.empty)(implicit app: Application): String = {
+    resourceAPI.saveWithMeta(file, filePath, meta)
   }
 }
