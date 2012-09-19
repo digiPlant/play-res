@@ -7,10 +7,12 @@ import play.api.test.Helpers._
 
 object ResourcesSpec extends Specification {
 
+  implicit val ctx = new ResContext()
+
   "Resources Controller" should {
 
-    "return resource" in new ResContext {
-      res.put(getTestFile)
+    "return resource" in {
+      ctx.res.put(ctx.getTestFile)
 
       val result = Resources.at("5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg")(FakeRequest())
 
@@ -18,8 +20,8 @@ object ResourcesSpec extends Specification {
       contentType(result) must beSome("image/jpeg")
     }
 
-    "return resource in supplied source" in new ResContext {
-      res.put(getTestFile, "images")
+    "return resource in supplied source" in {
+      ctx.res.put(ctx.getTestFile, "images")
 
       val result = Resources.at("5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg", "images")(FakeRequest())
 
