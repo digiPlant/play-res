@@ -53,8 +53,8 @@ class ResPlugin(app: Application) extends Plugin {
    * @return The unique file name with the metadata appended
    */
   def put(file: File, source: String = "default", filename: Option[String] = None, extension: Option[String] = None, meta: Seq[String] = Seq.empty): Option[String] = {
-    val ext = extension.getOrElse(FilenameUtils.getExtension(file.getName))
-    require(!ext.isEmpty, "file must have extension or extension must be specified")
+    val ext = extension.getOrElse(FilenameUtils.getExtension(filename.getOrElse(file.getName)))
+    require(!ext.isEmpty, "file must have extension or extension must be specified ["+ file.getName +"]")
 
     val name = filename.map(FilenameUtils.getBaseName(_)).getOrElse(DigestUtils.shaHex(new FileInputStream(file)))
 
@@ -64,7 +64,7 @@ class ResPlugin(app: Application) extends Plugin {
         base.mkdirs()
       }
 
-      val fileuid = name + meta.mkString(if (!meta.isEmpty) { "_" } else "", "_", ".") + ext
+      val fileuid = name + meta.mkString(if (!meta.isEmpty) "_" else "", "_", ".") + ext
       val target = new File(base, fileuid)
 
       if (!target.exists()) {
