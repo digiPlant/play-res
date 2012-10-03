@@ -46,4 +46,13 @@ trait TempFile extends Scope {
     FileUtils.copyFile(logo, tmpFile)
     tmpFile
   }
+
+  def getAnonymousTestFile(): File = {
+    tmp.mkdir()
+    val chars = ('a' to 'z') ++ ('A' to 'Z') ++ ('1' to '9')
+    val rand = (1 to 20).map(x => chars(Random.nextInt(chars.length))).mkString
+    val tmpFile = new File("tmp", rand)
+    FileUtils.copyFile(logo, tmpFile)
+    tmpFile
+  }
 }

@@ -53,7 +53,7 @@ class ResPlugin(app: Application) extends Plugin {
    * @return The unique file name with the metadata appended
    */
   def put(file: File, source: String = "default", filename: Option[String] = None, extension: Option[String] = None, meta: Seq[String] = Seq.empty): Option[String] = {
-    val ext = Option(FilenameUtils.getExtension(file.getName)).getOrElse(extension.getOrElse(""))
+    val ext = extension.getOrElse(FilenameUtils.getExtension(file.getName))
     require(!ext.isEmpty, "file must have extension or extension must be specified")
 
     val name = filename.map(FilenameUtils.getBaseName(_)).getOrElse(DigestUtils.shaHex(new FileInputStream(file)))
@@ -82,7 +82,7 @@ class ResPlugin(app: Application) extends Plugin {
    * @return The unique file name with the metadata appended
    */
   def put(filePart: play.mvc.Http.MultipartFormData.FilePart, source: String, meta: Seq[String]): Option[String] = {
-    put(filePart.getFile, source, None, Some(MimeTypes.types.map(_.swap).getOrElse(filePart.getContentType, "")), meta)
+    put(filePart.getFile, source, None, getExtensionFromMimeType(Option(filePart.getContentType)), meta)
   }
 
   /**
@@ -93,7 +93,7 @@ class ResPlugin(app: Application) extends Plugin {
    * @return The unique file name with the metadata appended
    */
   def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String, meta: Seq[String]): Option[String] = {
-    put(filePart.ref.file, source, None, Some(MimeTypes.types.map(_.swap).getOrElse(filePart.contentType.getOrElse(""), "")), meta)
+    put(filePart.ref.file, source, None, getExtensionFromMimeType(filePart.contentType), meta)
   }
 
   /**
@@ -149,4 +149,17 @@ class ResPlugin(app: Application) extends Plugin {
     targetPath
   }
 
+  /**
+   * Gets the file extension of known file types, but because the MimeTypes map isn't sorted properly we need to override the images for play-scalr
+   * otherwise it chooses the top most extension for image/jpeg = jfif
+   * @param mime The mimetype
+   * @return a file extension without the .
+   */
+  private def getExtensionFromMimeType(mime: Option[String]): Option[String] = mime match {
+    case None => None
+    case Some("image/jpeg") => Some("jpg")
+    case Some("image/png") => Some("png")
+    case Some("image/gif") => Some("gif")
+    case Some(m) => MimeTypes.types.map(_.swap).get(m)
+  }
 }

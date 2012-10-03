@@ -43,6 +43,12 @@ object ResPluginSpec extends Specification {
       fileuid must not beEmpty
     }
 
+    "put a scala filepart with no extension" in {
+      val f = FilePart("testPart", "filename", Some("image/jpeg"), TemporaryFile(ctx.getAnonymousTestFile()))
+      val fileuid = ctx.res.put(f, "default", Seq.empty)
+      fileuid must not beEmpty
+    }
+
     "get a resource" in {
       val fileuid = ctx.res put(ctx.getTestFile)
       val file = ctx.res get(fileuid.get)
