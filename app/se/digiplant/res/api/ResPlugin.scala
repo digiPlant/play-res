@@ -1,12 +1,13 @@
-package se.digiplant.resource.api
+package se.digiplant.res.api
 
 import play.api._
+import libs.{Files, MimeTypes}
 import play.api.mvc._
 import java.io.{FileInputStream, File}
 import org.apache.commons.io.{FilenameUtils, FileUtils}
 import org.apache.commons.codec.digest.DigestUtils
 
-class ResourcePlugin(app: Application) extends Plugin {
+class ResPlugin(app: Application) extends Plugin {
 
   lazy val configuration = app.configuration.getConfig("res").getOrElse(Configuration.empty)
 
@@ -47,17 +48,15 @@ class ResourcePlugin(app: Application) extends Plugin {
    * @param file A file to be stored
    * @param source The configured source name
    * @param filename Override the sha1 checksum generated filename
+   * @param extension The extension of the file
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
    * @return The unique file name with the metadata appended
    */
-  def put(file: File, source: String = "default", filename: String = "", meta: Seq[String] = Seq.empty): Option[String] = {
+  def put(file: File, source: String = "default", filename: Option[String] = None, extension: Option[String] = None, meta: Seq[String] = Seq.empty): Option[String] = {
+    val ext = Option(FilenameUtils.getExtension(file.getName)).getOrElse(extension.getOrElse(""))
+    require(!ext.isEmpty, "file must have extension or extension must be specified")
 
-    val (name, ext) = if (filename.isEmpty) {
-      val input: FileInputStream = new FileInputStream(file)
-      (DigestUtils.shaHex(input), FilenameUtils.getExtension(file.getName))
-    } else {
-      (FilenameUtils.getBaseName(filename), FilenameUtils.getExtension(filename))
-    }
+    val name = filename.map(FilenameUtils.getBaseName(_)).getOrElse(DigestUtils.shaHex(new FileInputStream(file)))
 
     sources.get(source).flatMap { dir =>
       val base = new File(dir, hashAsDirectories(name))
@@ -73,6 +72,28 @@ class ResourcePlugin(app: Application) extends Plugin {
       }
       Some(fileuid)
     }
+  }
+
+  /**
+   * Puts a filePart into the supplied source and tries to figure out it's correct mimetype and extension (Java version)
+   * @param filePart A filePart that's been uploaded to play to be stored
+   * @param source The configured source name
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @return The unique file name with the metadata appended
+   */
+  def put(filePart: play.mvc.Http.MultipartFormData.FilePart, source: String, meta: Seq[String]): Option[String] = {
+    put(filePart.getFile, source, None, Some(MimeTypes.types.map(_.swap).getOrElse(filePart.getContentType, "")), meta)
+  }
+
+  /**
+   * Puts a filePart into the supplied source and tries to figure out it's correct mimetype and extension
+   * @param filePart A filePart that's been uploaded to play to be stored
+   * @param source The configured source name
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @return The unique file name with the metadata appended
+   */
+  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String, meta: Seq[String]): Option[String] = {
+    put(filePart.ref.file, source, None, Some(MimeTypes.types.map(_.swap).getOrElse(filePart.contentType.getOrElse(""), "")), meta)
   }
 
   /**

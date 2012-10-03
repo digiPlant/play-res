@@ -1,42 +1,25 @@
 import sbt._
 import Keys._
+import PlayProject._
 
 object Plugin extends Build {
 
-  lazy val buildVersion = "0.1-SNAPSHOT"
-  lazy val playVersion = "2.1-SNAPSHOT"
+  val pluginName = "play-res"
+  val pluginVersion = "0.1-SNAPSHOT"
 
-  lazy val res = Project(
-    id = "play-res",
-    base = file("."),
-    settings = Project.defaultSettings ++ Publish.settings ++ Ls.settings
-  ).settings(
-    organization := "se.digiplant",
-    version := buildVersion,
-    shellPrompt := ShellPrompt.buildShellPrompt,
-    scalaVersion := "2.9.2",
-
-    //crossScalaVersions := Seq("2.9.1", "2.9.2"),
-
-    testFrameworks += TestFrameworks.Specs2,
-    parallelExecution in Test := false,
-
-    // Use when developing against a locally built play master
-    resolvers ++= Seq(
-      Resolver.file("Local Play Repository", file(Path.userHome.absolutePath + "/Lib/play2/repository/local"))(Resolver.ivyStylePatterns),
-      "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
-      "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/snapshots/",
-      "Sonatype Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots"
-    ),
-
-    libraryDependencies ++= Seq(
-      "commons-io" % "commons-io" % "2.4",
-      "commons-codec" % "commons-codec" % "1.6",
-      "play" %% "play" % playVersion % "provided",
-      "play" %% "play-test" % playVersion % "test",
-      "org.specs2" %% "specs2" % "1.12.2-SNAPSHOT" % "test"
-    )
+  val pluginDependencies = Seq(
+    "commons-io" % "commons-io" % "2.4",
+    "commons-codec" % "commons-codec" % "1.6"
   )
+
+  lazy val res = PlayProject(pluginName, pluginVersion, pluginDependencies, mainLang = SCALA, settings = Defaults.defaultSettings ++ Publish.settings ++ Ls.settings)
+    .settings(
+      organization := "se.digiplant",
+      playPlugin := true,
+      ebeanEnabled := true,
+      shellPrompt := ShellPrompt.buildShellPrompt,
+      resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases"
+    )
 }
 
 object Publish {
@@ -84,7 +67,7 @@ object ShellPrompt {
     (state: State) => {
       val currProject = Project.extract (state).currentProject.id
       "%s:%s:%s> ".format (
-        currProject, currBranch, Plugin.buildVersion
+        currProject, currBranch, Plugin.pluginVersion
       )
     }
   }

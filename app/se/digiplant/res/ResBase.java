@@ -1,4 +1,4 @@
-package se.digiplant.resource;
+package se.digiplant.res;
 
 import org.apache.commons.io.FilenameUtils;
 import play.db.ebean.Model;
@@ -7,11 +7,11 @@ import play.libs.Scala;
 import javax.persistence.*;
 import java.io.File;
 
-@Table(name="resources")
+@Table(name="res")
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name="res_type", discriminatorType=DiscriminatorType.STRING, length=20)
-public abstract class ResourceBase extends Model {
+public abstract class ResBase extends Model {
 
     @Id
     public String filename;
@@ -24,24 +24,24 @@ public abstract class ResourceBase extends Model {
     protected File file = null;
     public File getFile() {
         if (file == null) {
-            file = Resource.get(filename, source);
+            file = Res.get(filename, source);
         }
         return file;
     }
 
-    protected ResourceBase() {}
+    protected ResBase() {}
 
-    public ResourceBase(String filename) {
+    public ResBase(String filename) {
         this.filename = filename;
     }
 
-    public ResourceBase(File file, String source) {
+    public ResBase(File file, String source) {
         this.source = source;
         this.file = file;
         this.mimetype = Scala.orNull(play.api.libs.MimeTypes.forExtension(filename));
     }
 
-    public ResourceBase(File file) {
+    public ResBase(File file) {
         this(file, "default");
     }
 
@@ -53,5 +53,5 @@ public abstract class ResourceBase extends Model {
         return file != null && file.exists();
     }
 
-    public static Finder<Long, ResourceBase> find = new Finder<Long, ResourceBase>(Long.class, ResourceBase.class);
+    public static Finder<Long, ResBase> find = new Finder<Long, ResBase>(Long.class, ResBase.class);
 }

@@ -1,5 +1,6 @@
-package se.digiplant.resource.api
+package se.digiplant.res
 
+import se.digiplant.res.api.ResPlugin
 import org.specs2.specification.{BeforeAfterAround, Scope}
 import org.specs2.execute.Result
 import play.api._
@@ -11,7 +12,7 @@ import util.Random
 
 class ResContext(val app: FakeApplication = new FakeApplication(
   additionalPlugins = Seq(
-    "se.digiplant.resource.api.ResourcePlugin"
+    "se.digiplant.res.api.ResPlugin"
   ),
   additionalConfiguration = Map(
     ("res.default" -> "tmp/default"),
@@ -21,9 +22,9 @@ class ResContext(val app: FakeApplication = new FakeApplication(
 
   implicit val implicitApp = app
 
-  lazy val res = app.plugin[ResourcePlugin].get
+  lazy val res = app.plugin[ResPlugin].get
 
-  def around[T](t: => T)(implicit evidence$1: (T) => Result) = running(app)(t)
+  def around[T](t: => T)(implicit evidence: (T) => Result) = running(app)(t)
 
   def before {
   }
@@ -35,7 +36,7 @@ class ResContext(val app: FakeApplication = new FakeApplication(
 
 trait TempFile extends Scope {
   val tmp = new File("tmp")
-  val logo = new File("src/test/resources/digiPlant.jpg")
+  val logo = new File("test/resources/digiPlant.jpg")
 
   def getTestFile(): File = {
     tmp.mkdir()

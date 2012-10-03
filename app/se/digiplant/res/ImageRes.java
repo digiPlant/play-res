@@ -1,4 +1,4 @@
-package se.digiplant.resource;
+package se.digiplant.res;
 
 import com.google.common.base.Joiner;
 import org.apache.commons.lang3.ArrayUtils;
@@ -10,11 +10,11 @@ import java.io.File;
 
 @Entity
 @DiscriminatorValue("image")
-public class ImageResource extends ResourceBase {
+public class ImageRes extends ResBase {
 
-    public ImageResource() {}
+    public ImageRes() {}
 
-    public ImageResource(File file, String source) throws IllegalArgumentException {
+    public ImageRes(File file, String source) throws IllegalArgumentException {
         super(file, source);
 
         String[] imageTypes = new String[]{"jpg", "jpeg", "gif", "png"};

@@ -1,10 +1,11 @@
 resolvers ++= Seq(
-  "sbt-idea-repo" at "http://mpeltonen.github.com/maven/",
+  Resolver.file("Local Play Repository", file(Path.userHome.absolutePath + "/Lib/play2/repository/local"))(Resolver.ivyStylePatterns),
+  "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
   "less is" at "http://repo.lessis.me",
   "coda" at "http://repo.codahale.com"
 )
 
-addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.1.0")
+addSbtPlugin("play" % "sbt-plugin" % "2.1-SNAPSHOT")
 
 addSbtPlugin("com.jsuereth" % "xsbt-gpg-plugin" % "0.6")
 

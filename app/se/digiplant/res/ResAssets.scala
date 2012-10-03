@@ -1,4 +1,4 @@
-package se.digiplant.resource.api
+package se.digiplant.res
 
 import play.api._
 import play.api.mvc._
@@ -10,7 +10,7 @@ import java.io.File
 
 import play.api.Play.current
 
-object Resources extends Controller {
+object ResAssets extends Controller {
 
   private val timeZoneCode = "GMT"
 
@@ -40,7 +40,7 @@ object Resources extends Controller {
       }
     }
 
-    Resource.get(file, source).map { file =>
+    api.Res.get(file, source).map { file =>
       request.headers.get(IF_NONE_MATCH).flatMap {
         ifNoneMatch =>
           etagFor(file).filter(_ == ifNoneMatch)
