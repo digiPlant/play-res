@@ -2,7 +2,7 @@ package se.digiplant.res;
 
 import org.apache.commons.io.FilenameUtils;
 import play.db.ebean.Model;
-import play.libs.Scala;
+import se.digiplant.res.Res;
 
 import javax.persistence.*;
 import java.io.File;
@@ -11,12 +11,11 @@ import java.io.File;
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name="res_type", discriminatorType=DiscriminatorType.STRING, length=20)
-public abstract class ResBase extends Model {
+public class ResBase extends Model {
 
     @Id
-    public String filename;
+    public String id;
 
-    @Id
     public String source;
 
     public String mimetype;
@@ -24,29 +23,13 @@ public abstract class ResBase extends Model {
     protected File file = null;
     public File getFile() {
         if (file == null) {
-            file = Res.get(filename, source);
+            file = Res.get(id, source);
         }
         return file;
     }
 
-    protected ResBase() {}
-
-    public ResBase(String filename) {
-        this.filename = filename;
-    }
-
-    public ResBase(File file, String source) {
-        this.source = source;
-        this.file = file;
-        this.mimetype = Scala.orNull(play.api.libs.MimeTypes.forExtension(filename));
-    }
-
-    public ResBase(File file) {
-        this(file, "default");
-    }
-
     public String extension() {
-        return filename != null ? FilenameUtils.getExtension(filename) : "";
+        return id != null ? FilenameUtils.getExtension(id) : "";
     }
 
     public boolean exists() {
