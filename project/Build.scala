@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import play.Project._
+import PlayProject._
 
 object Plugin extends Build {
 
@@ -12,11 +12,11 @@ object Plugin extends Build {
     "commons-codec" % "commons-codec" % "1.6"
   )
 
-  lazy val res = play.Project(pluginName, pluginVersion, pluginDependencies, settings = Defaults.defaultSettings ++ Publish.settings ++ Ls.settings)
+  lazy val res = PlayProject(pluginName, pluginVersion, pluginDependencies, settings = Defaults.defaultSettings ++ Publish.settings ++ Ls.settings)
     .settings(
       //crossScalaVersions := Seq("2.9.1", "2.10.0-M7"),
       organization := "se.digiplant",
-      playPlugin := true,
+      //playPlugin := true,
       shellPrompt := ShellPrompt.buildShellPrompt,
       resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases"
     )
