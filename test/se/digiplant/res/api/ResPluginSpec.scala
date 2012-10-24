@@ -5,7 +5,6 @@ import org.specs2.mutable.Specification
 import java.io.{FileInputStream, File}
 import org.apache.commons.io.IOUtils
 import play.api._
-import libs.Files
 import libs.Files.TemporaryFile
 import play.api.mvc.MultipartFormData.FilePart
 
@@ -21,19 +20,19 @@ object ResPluginSpec extends Specification {
 
     "put a resource" in {
       val fileuid = ctx.res put(ctx.getTestFile)
-      fileuid.isDefined must beTrue
+      fileuid must not beEmpty
       new File("tmp/default/5564/ac5e/5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg").exists() must beTrue
     }
 
     "put a resource into a supplied source" in {
       val fileuid = ctx.res put(ctx.getTestFile, "images")
-      fileuid.isDefined must beTrue
+      fileuid must not beEmpty
       new File("tmp/images/5564/ac5e/5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg").exists() must beTrue
     }
 
     "put a resource with metadata" in {
       val fileuid = ctx.res put(ctx.getTestFile, meta = Seq("100", "100", "auto"))
-      fileuid.isDefined must beTrue
+      fileuid must not beEmpty
       new File("tmp/default/5564/ac5e/5564ac5e3968e77b4022f55a23d36630bdeb0274_100_100_auto.jpg").exists() must beTrue
     }
 
@@ -51,20 +50,20 @@ object ResPluginSpec extends Specification {
 
     "get a resource" in {
       val fileuid = ctx.res put(ctx.getTestFile)
-      val file = ctx.res get(fileuid.get)
+      val file = ctx.res get(fileuid)
       IOUtils.contentEquals(new FileInputStream(ctx.logo), new FileInputStream(file.get)) must beTrue
     }
 
     "get a resource from a supplied source" in {
       val fileuid = ctx.res put(ctx.getTestFile, "images")
-      val file = ctx.res get(fileuid.get, "images")
+      val file = ctx.res get(fileuid, "images")
 
       IOUtils.contentEquals(new FileInputStream(ctx.logo), new FileInputStream(file.get)) must beTrue
     }
 
     "get a resource with the supplied metadata" in {
       val fileuid = ctx.res put(ctx.getTestFile, meta = Seq("100", "100", "auto"))
-      val file = ctx.res get(fileuid.get)
+      val file = ctx.res get(fileuid)
 
       IOUtils.contentEquals(new FileInputStream(ctx.logo), new FileInputStream(file.get)) must beTrue
     }
@@ -74,7 +73,7 @@ object ResPluginSpec extends Specification {
       var file = new File("tmp/default/5564/ac5e/5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg")
       file.exists() must beTrue
 
-      ctx.res delete(fileuid.get) must beTrue
+      ctx.res delete(fileuid) must beTrue
       file.exists() must beFalse
     }
 
@@ -83,7 +82,7 @@ object ResPluginSpec extends Specification {
       var file = new File("tmp/default/5564/ac5e/5564ac5e3968e77b4022f55a23d36630bdeb0274_100_100_auto.jpg")
       file.exists() must beTrue
 
-      ctx.res delete(fileuid.get) must beTrue
+      ctx.res delete(fileuid) must beTrue
       file.exists() must beFalse
     }
 

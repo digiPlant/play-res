@@ -52,26 +52,27 @@ class ResPlugin(app: Application) extends Plugin {
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
    * @return The unique file name with the metadata appended
    */
-  def put(file: File, source: String = "default", filename: Option[String] = None, extension: Option[String] = None, meta: Seq[String] = Seq.empty): Option[String] = {
+  @throws(classOf[IllegalArgumentException])
+  def put(file: File, source: String = "default", filename: Option[String] = None, extension: Option[String] = None, meta: Seq[String] = Seq.empty): String = {
     val ext = extension.getOrElse(FilenameUtils.getExtension(filename.getOrElse(file.getName)))
     require(!ext.isEmpty, "file must have extension or extension must be specified ["+ file.getName +"]")
+    require(sources.get(source).isDefined, "Source: " + source + " doesn't exist, make sure you have specified it in conf/application.conf.")
 
     val name = filename.map(FilenameUtils.getBaseName(_)).getOrElse(DigestUtils.shaHex(new FileInputStream(file)))
+    val dir = sources.get(source).get
 
-    sources.get(source).flatMap { dir =>
-      val base = new File(dir, hashAsDirectories(name))
-      if (!base.exists()) {
-        base.mkdirs()
-      }
-
-      val fileuid = name + meta.mkString(if (!meta.isEmpty) "_" else "", "_", ".") + ext
-      val target = new File(base, fileuid)
-
-      if (!target.exists()) {
-        FileUtils.moveFile(file, target)
-      }
-      Some(fileuid)
+    val base = new File(dir, hashAsDirectories(name))
+    if (!base.exists()) {
+      base.mkdirs()
     }
+
+    val fileuid = name + meta.mkString(if (!meta.isEmpty) "_" else "", "_", ".") + ext
+    val target = new File(base, fileuid)
+
+    if (!target.exists()) {
+      FileUtils.moveFile(file, target)
+    }
+    fileuid
   }
 
   /**
@@ -81,7 +82,8 @@ class ResPlugin(app: Application) extends Plugin {
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
    * @return The unique file name with the metadata appended
    */
-  def put(filePart: play.mvc.Http.MultipartFormData.FilePart, source: String, meta: Seq[String]): Option[String] = {
+  @throws(classOf[IllegalArgumentException])
+  def put(filePart: play.mvc.Http.MultipartFormData.FilePart, source: String, meta: Seq[String]): String = {
     put(filePart.getFile, source, None, getExtensionFromMimeType(Option(filePart.getContentType)), meta)
   }
 
@@ -92,7 +94,8 @@ class ResPlugin(app: Application) extends Plugin {
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
    * @return The unique file name with the metadata appended
    */
-  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String, meta: Seq[String]): Option[String] = {
+  @throws(classOf[IllegalArgumentException])
+  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String, meta: Seq[String]): String = {
     put(filePart.ref.file, source, None, getExtensionFromMimeType(filePart.contentType), meta)
   }
 

@@ -31,9 +31,11 @@ object Res {
    * @param filename Override the sha1 checksum generated filename
    * @param extension The extension of the file
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @throws java.lang.IllegalArgumentException
    * @return The unique file name with the metadata appended
    */
-  def put(file: File, source: String = "default", filename: Option[String] = None, extension: Option[String] = None, meta: Seq[String] = Seq.empty)(implicit app: Application): Option[String] = {
+  @throws(classOf[IllegalArgumentException])
+  def put(file: File, source: String = "default", filename: Option[String] = None, extension: Option[String] = None, meta: Seq[String] = Seq.empty)(implicit app: Application): String = {
     resAPI.put(file, source, filename, extension, meta)
   }
 
@@ -42,17 +44,34 @@ object Res {
    * @param filePart A file to be stored
    * @param source The configured source name
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @throws java.lang.IllegalArgumentException
    * @return The unique file name with the metadata appended
    */
-  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String, meta: Seq[String])(implicit app: Application): Option[String] = {
+  @throws(classOf[IllegalArgumentException])
+  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String, meta: Seq[String])(implicit app: Application): String = {
     resAPI.put(filePart.ref.file, source, None, None, meta)
   }
 
-  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String)(implicit app: Application): Option[String] = {
+  /**
+   * Puts a filePart into the supplied source
+   * @param filePart A file to be stored
+   * @param source The configured source name
+   * @throws java.lang.IllegalArgumentException
+   * @return
+   */
+  @throws(classOf[IllegalArgumentException])
+  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String)(implicit app: Application): String = {
     put(filePart, source, Seq.empty)
   }
 
-  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile])(implicit app: Application): Option[String] = {
+  /**
+   * Puts a filePart into the supplied source
+   * @param filePart A file to be stored
+   * @throws java.lang.IllegalArgumentException
+   * @return
+   */
+  @throws(classOf[IllegalArgumentException])
+  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile])(implicit app: Application): String = {
     put(filePart, "default")
   }
 
@@ -63,7 +82,8 @@ object Res {
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
    * @return The unique file name with the metadata appended
    */
-  def put(filePart: play.mvc.Http.MultipartFormData.FilePart, source: String, meta: Seq[String])(implicit app: Application): Option[String] = {
+  @throws(classOf[IllegalArgumentException])
+  def put(filePart: play.mvc.Http.MultipartFormData.FilePart, source: String, meta: Seq[String])(implicit app: Application): String = {
     resAPI.put(filePart, source, meta)
   }
 

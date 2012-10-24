@@ -1,5 +1,4 @@
 resolvers ++= Seq(
-  Resolver.file("Local Play Repository", file(Path.userHome.absolutePath + "/Lib/play2/repository/local"))(Resolver.ivyStylePatterns),
   Resolver.url("sbt-plugin-releases", new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns),
   "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
   "less is" at "http://repo.lessis.me",

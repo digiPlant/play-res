@@ -43,7 +43,7 @@ public class Res {
      * @return The unique file name with the metadata appended
      */
     public static String put(File file, String source, String filename, String extension, List<String> meta) {
-        return orNull(se.digiplant.res.api.Res.put(file, source, Option.apply(filename), Option.apply(extension), toSeq(meta), play.api.Play.unsafeApplication()));
+        return se.digiplant.res.api.Res.put(file, source, Option.apply(filename), Option.apply(extension), toSeq(meta), play.api.Play.unsafeApplication());
     }
 
     public static String put(File file, String source, String filename, String extension) {
@@ -70,7 +70,7 @@ public class Res {
      * @return The unique file name with the metadata appended
      */
     public static String put(play.mvc.Http.MultipartFormData.FilePart filePart, String source, List<String> meta) {
-        return orNull(se.digiplant.res.api.Res.put(filePart, source, toSeq(meta), play.api.Play.unsafeApplication()));
+        return se.digiplant.res.api.Res.put(filePart, source, toSeq(meta), play.api.Play.unsafeApplication());
     }
 
     public static String put(play.mvc.Http.MultipartFormData.FilePart filePart, String source) {
