@@ -1,37 +1,31 @@
 import sbt._
 import Keys._
-import PlayProject._
+import play.Project._
 
 object Plugin extends Build {
 
   val pluginName = "play-res"
-  val pluginVersion = "0.1-SNAPSHOT"
+  val pluginVersion = "0.2-SNAPSHOT"
 
   val pluginDependencies = Seq(
     "commons-io" % "commons-io" % "2.4",
     "commons-codec" % "commons-codec" % "1.6"
   )
 
-  lazy val res = PlayProject(pluginName, pluginVersion, pluginDependencies, settings = Defaults.defaultSettings ++ Publish.settings ++ Ls.settings)
+  lazy val res = play.Project(pluginName, pluginVersion, pluginDependencies, settings = Defaults.defaultSettings ++ Publish.settings ++ Ls.settings)
     .settings(
-      //crossScalaVersions := Seq("2.9.1", "2.9.2"),
+      crossScalaVersions := Seq("2.9.1", "2.10.0-RC1"),
       organization := "se.digiplant",
-      //playPlugin := true,
+      playPlugin := true,
       shellPrompt := ShellPrompt.buildShellPrompt,
-      resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases"
+      resolvers += Resolver.sonatypeRepo("releases")
     )
 }
 
 object Publish {
   lazy val settings = Seq(
     publishMavenStyle := true,
-    publishTo <<= version { (v: String) =>
-      val nexus = "https://oss.sonatype.org/"
-      if (v.trim.endsWith("SNAPSHOT"))
-        Some("snapshots" at nexus + "content/repositories/snapshots")
-      else
-        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-    },
+    publishTo <<= version((v: String) => Some(Resolver.sonatypeRepo(if (v.trim.endsWith("SNAPSHOT")) "snapshots" else "releases"))),
     publishArtifact in Test := false,
     pomIncludeRepository := { _ => false },
     licenses := Seq("Apache 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),

@@ -1,12 +1,11 @@
 resolvers ++= Seq(
+  Resolver.file("Local Play Repository", file(Path.userHome.absolutePath + "/Lib/play2/repository/local"))(Resolver.ivyStylePatterns),
   Resolver.url("sbt-plugin-releases", new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns),
-  "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
-  "less is" at "http://repo.lessis.me",
-  "coda" at "http://repo.codahale.com"
+  Resolver.sonatypeRepo("releases")
 )
 
-addSbtPlugin("play" % "sbt-plugin" % "2.0.4")
+addSbtPlugin("play" % "sbt-plugin" % "2.1-SNAPSHOT")
 
-addSbtPlugin("com.jsuereth" % "xsbt-gpg-plugin" % "0.6.1")
+addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.7")
 
 addSbtPlugin("me.lessis" % "ls-sbt" % "0.1.2")

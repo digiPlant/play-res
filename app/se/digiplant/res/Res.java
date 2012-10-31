@@ -4,11 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static play.libs.Scala.orNull;
-import static play.libs.Scala.toSeq;
-
-import scala.Option;
-import scala.collection.JavaConversions.*;
+import play.libs.*;
 
 public class Res {
 
@@ -22,7 +18,7 @@ public class Res {
      * @return A File
      */
     public static File get(String fileuid, String source, List<String> meta) {
-        return orNull(se.digiplant.res.api.Res.get(fileuid, source, toSeq(meta), play.api.Play.unsafeApplication()));
+        return Scala.orNull(se.digiplant.res.api.Res.get(fileuid, source, Scala.toSeq(meta)));
     }
 
     public static File get(String fileuid, String source) {
@@ -43,7 +39,7 @@ public class Res {
      * @return The unique file name with the metadata appended
      */
     public static String put(File file, String source, String filename, String extension, List<String> meta) {
-        return se.digiplant.res.api.Res.put(file, source, Option.apply(filename), Option.apply(extension), toSeq(meta), play.api.Play.unsafeApplication());
+        return se.digiplant.res.api.Res.put(file, source, Scala.Option(filename), Scala.Option(extension), Scala.toSeq(meta));
     }
 
     public static String put(File file, String source, String filename, String extension) {
@@ -70,7 +66,7 @@ public class Res {
      * @return The unique file name with the metadata appended
      */
     public static String put(play.mvc.Http.MultipartFormData.FilePart filePart, String source, List<String> meta) {
-        return se.digiplant.res.api.Res.put(filePart, source, toSeq(meta), play.api.Play.unsafeApplication());
+        return se.digiplant.res.api.Res.put(filePart, source, Scala.toSeq(meta));
     }
 
     public static String put(play.mvc.Http.MultipartFormData.FilePart filePart, String source) {
@@ -89,7 +85,7 @@ public class Res {
      * @return true if file was deleted, false if it failed
      */
     public static boolean delete(String fileuid, String source, List<String> meta) {
-        return se.digiplant.res.api.Res.delete(fileuid, source, toSeq(meta), play.api.Play.unsafeApplication());
+        return se.digiplant.res.api.Res.delete(fileuid, source, Scala.toSeq(meta));
     }
 
     public static boolean delete(String fileuid, String source) {
@@ -107,6 +103,6 @@ public class Res {
      * @return File or null
      */
     public static File fileWithMeta(String filePath, List<String> meta) {
-        return orNull(se.digiplant.res.api.Res.fileWithMeta(filePath, toSeq(meta), play.api.Play.unsafeApplication()));
+        return Scala.orNull(se.digiplant.res.api.Res.fileWithMeta(filePath, Scala.toSeq(meta)));
     }
 }

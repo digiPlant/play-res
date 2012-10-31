@@ -12,7 +12,7 @@ object ResAssetsSpec extends Specification {
 
     "return resource" in {
       running(ctx.app) {
-        ctx.res.put(ctx.getTestFile)
+        api.Res.put(ctx.testFile)
 
         val result = ResAssets.at("5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg")(FakeRequest())
 
@@ -23,7 +23,7 @@ object ResAssetsSpec extends Specification {
 
     "return resource in supplied source" in {
       running(ctx.app) {
-        ctx.res.put(ctx.getTestFile, "images")
+        api.Res.put(ctx.testFile, "images")
 
         val result = ResAssets.at("5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg", "images")(FakeRequest())
 

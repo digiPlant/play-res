@@ -1,27 +1,45 @@
 package se.digiplant.res.api
 
 import play.api._
-import java.io.File
-import libs.Files
+import libs.{Files, MimeTypes}
+import java.io.{FileInputStream, File}
+import org.apache.commons.io.{FilenameUtils, FileUtils}
+import org.apache.commons.codec.digest.DigestUtils
+
+import play.api.Play.current
 
 object Res {
 
-  private def resAPI(implicit app: Application): ResPlugin = {
-    app.plugin[ResPlugin] match {
-      case Some(plugin) => plugin
-      case None => sys.error("The Res Plugin is not registered in conf/play.plugins")
-    }
-  }
+  lazy val configuration = Play.configuration.getConfig("res").getOrElse(Configuration.empty)
+
+  lazy val sources: Map[String, File] = configuration.subKeys.map {
+    sourceKey =>
+      val path = configuration.getString(sourceKey).getOrElse(throw configuration.reportError("res." + sourceKey, "Missing res path[" + sourceKey + "]"))
+      val file = Play.getFile(path)
+      if (file.isDirectory && !file.exists()) {
+        FileUtils.forceMkdir(file)
+      }
+      sourceKey -> file
+  }.toMap
 
   /**
    * Retrieves a file with the specified fileuid and if specified all meta attributes
    * @param fileuid The SHA1 filename with the extension, it can also include the meta if you don't want to specify it separately
    * @param source The configured source name
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
-   * @return A File
+   * @return Option[File]
    */
-  def get(fileuid: String, source: String = "default", meta: Seq[String] = Seq.empty)(implicit app: Application): Option[File] = {
-    resAPI.get(fileuid, source, meta)
+  def get(fileuid: String, source: String = "default", meta: Seq[String] = Nil): Option[File] = {
+    sources.get(source).flatMap { dir =>
+      val filename = if (meta.isEmpty)
+          fileuid
+        else {
+          val name = FilenameUtils.getBaseName(fileuid)
+          val ext = FilenameUtils.getExtension(fileuid)
+          name + meta.mkString(if (!meta.isEmpty) { "_" } else "", "_", ".") + ext
+        }
+      Option(FileUtils.getFile(dir, hashAsDirectories(filename), filename)).filter(_.exists)
+    }
   }
 
   /**
@@ -31,60 +49,59 @@ object Res {
    * @param filename Override the sha1 checksum generated filename
    * @param extension The extension of the file
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
-   * @throws java.lang.IllegalArgumentException
    * @return The unique file name with the metadata appended
    */
   @throws(classOf[IllegalArgumentException])
-  def put(file: File, source: String = "default", filename: Option[String] = None, extension: Option[String] = None, meta: Seq[String] = Seq.empty)(implicit app: Application): String = {
-    resAPI.put(file, source, filename, extension, meta)
+  def put(file: File, source: String = "default", filename: Option[String] = None, extension: Option[String] = None, meta: Seq[String] = Nil): String = {
+    val extensionOptions = List(
+      extension,
+      filename.flatMap(x => Option(FilenameUtils.getExtension(x))),
+      Option(FilenameUtils.getExtension(file.getName))
+    )
+    val ext = extensionOptions.collectFirst { case Some(x) => x }
+
+    require(ext.isDefined, "file must have extension or extension must be specified ["+ file.getName +"]")
+    require(sources.get(source).isDefined, "Source: " + source + " doesn't exist, make sure you have specified it in conf/application.conf.")
+
+    val name = filename.map(FilenameUtils.getBaseName(_)).getOrElse(DigestUtils.shaHex(new FileInputStream(file)))
+    val dir = sources.get(source).get
+
+    val base = new File(dir, hashAsDirectories(name))
+    if (!base.exists()) {
+      base.mkdirs()
+    }
+
+    val fileuid = name + meta.mkString(if (!meta.isEmpty) "_" else "", "_", ".") + ext.get
+    val target = new File(base, fileuid)
+
+    if (!target.exists()) {
+      FileUtils.moveFile(file, target)
+    }
+    fileuid
   }
 
   /**
-   * Puts a filePart into the supplied source
-   * @param filePart A file to be stored
-   * @param source The configured source name
-   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
-   * @throws java.lang.IllegalArgumentException
-   * @return The unique file name with the metadata appended
-   */
-  @throws(classOf[IllegalArgumentException])
-  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String, meta: Seq[String])(implicit app: Application): String = {
-    resAPI.put(filePart.ref.file, source, None, None, meta)
-  }
-
-  /**
-   * Puts a filePart into the supplied source
-   * @param filePart A file to be stored
-   * @param source The configured source name
-   * @throws java.lang.IllegalArgumentException
-   * @return
-   */
-  @throws(classOf[IllegalArgumentException])
-  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String)(implicit app: Application): String = {
-    put(filePart, source, Seq.empty)
-  }
-
-  /**
-   * Puts a filePart into the supplied source
-   * @param filePart A file to be stored
-   * @throws java.lang.IllegalArgumentException
-   * @return
-   */
-  @throws(classOf[IllegalArgumentException])
-  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile])(implicit app: Application): String = {
-    put(filePart, "default")
-  }
-
-  /**
-   * Puts a filePart into the supplied source
-   * @param filePart A file to be stored
+   * Puts a filePart into the supplied source and tries to figure out it's correct mimetype and extension (Java version)
+   * @param filePart A filePart that's been uploaded to play to be stored
    * @param source The configured source name
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
    * @return The unique file name with the metadata appended
    */
   @throws(classOf[IllegalArgumentException])
-  def put(filePart: play.mvc.Http.MultipartFormData.FilePart, source: String, meta: Seq[String])(implicit app: Application): String = {
-    resAPI.put(filePart, source, meta)
+  def put(filePart: play.mvc.Http.MultipartFormData.FilePart, source: String, meta: Seq[String]): String = {
+    put(filePart.getFile, source, None, getExtensionFromMimeType(Option(filePart.getContentType)), meta)
+  }
+
+  /**
+   * Puts a filePart into the supplied source and tries to figure out it's correct mimetype and extension
+   * @param filePart A filePart that's been uploaded to play to be stored
+   * @param source The configured source name
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @return The unique file name with the metadata appended
+   */
+  @throws(classOf[IllegalArgumentException])
+  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String, meta: Seq[String]): String = {
+    put(filePart.ref.file, source, None, getExtensionFromMimeType(filePart.contentType), meta)
   }
 
   /**
@@ -94,9 +111,9 @@ object Res {
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
    * @return true if file was deleted, false if it failed
    */
-  def delete(fileuid: String, source: String = "default", meta: Seq[String] = Seq.empty)(implicit app: Application): Boolean = {
-    resAPI.delete(fileuid, source, meta)
-  }
+  def delete(fileuid: String, source: String = "default", meta: Seq[String] = Nil): Boolean = get(fileuid, source, meta).map(_.delete()).getOrElse(false)
+
+  private def hashAsDirectories(hash: String): String = hash.substring(0, 4) + '/' + hash.substring(4, 8)
 
   /**
    * Retrieves a file with the specified filepath and if specified all meta attributes
@@ -104,8 +121,11 @@ object Res {
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
    * @return Option[File]
    */
-  def fileWithMeta(filePath: String, meta: Seq[String] = Seq.empty)(implicit app: Application): Option[File] = {
-    resAPI.fileWithMeta(filePath, meta)
+  def fileWithMeta(filePath: String, meta: Seq[String] = Nil): Option[File] = {
+    val path = FilenameUtils.getPath(filePath)
+    val name = FilenameUtils.getBaseName(filePath)
+    val ext = FilenameUtils.getExtension(filePath)
+    Play.getExistingFile(path + name + meta.mkString(if (!meta.isEmpty) { "_" } else "", "_", ".") + ext)
   }
 
   /**
@@ -115,7 +135,39 @@ object Res {
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
    * @return The unique filePath with the metadata appended
    */
-  def saveWithMeta(file: File, filePath: String, meta: Seq[String] = Seq.empty)(implicit app: Application): String = {
-    resAPI.saveWithMeta(file, filePath, meta)
+  def saveWithMeta(file: File, filePath: String, meta: Seq[String] = Nil): String = {
+
+    val path = FilenameUtils.getPath(filePath)
+    val name = FilenameUtils.getBaseName(filePath)
+    val ext = FilenameUtils.getExtension(filePath)
+
+    val base = Play.getFile(path)
+    if (!base.exists()) {
+      base.mkdirs()
+    }
+
+    val targetPath = path + name + meta.mkString(if (!meta.isEmpty) { "_" } else "", "_", ".") + ext
+    val target = Play.getFile(targetPath)
+    if (target.exists()) {
+      FileUtils.copyFile(file, target)
+    } else {
+      FileUtils.moveFile(file, target)
+    }
+
+    targetPath
+  }
+
+  /**
+   * Gets the file extension of known file types, but because the MimeTypes map isn't sorted properly we need to override the images for play-scalr
+   * otherwise it chooses the top most extension for image/jpeg = jfif
+   * @param mime The mimetype
+   * @return a file extension without the .
+   */
+  private def getExtensionFromMimeType(mime: Option[String]): Option[String] = mime match {
+    case None => None
+    case Some("image/jpeg") => Some("jpg")
+    case Some("image/png") => Some("png")
+    case Some("image/gif") => Some("gif")
+    case Some(m) => MimeTypes.types.map(_.swap).get(m)
   }
 }
