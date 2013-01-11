@@ -64,6 +64,9 @@ object Res {
     require(sources.get(source).isDefined, "Source: " + source + " doesn't exist, make sure you have specified it in conf/application.conf.")
 
     val name = filename.map(FilenameUtils.getBaseName(_)).getOrElse(DigestUtils.shaHex(new FileInputStream(file)))
+
+    require(name.length > 12, "name must contain atleast 12 chars to be able to be stored properly.")
+
     val dir = sources.get(source).get
 
     val base = new File(dir, hashAsDirectories(name))
@@ -89,7 +92,12 @@ object Res {
    */
   @throws(classOf[IllegalArgumentException])
   def put(filePart: play.mvc.Http.MultipartFormData.FilePart, source: String, meta: Seq[String]): String = {
-    put(filePart.getFile, source, None, getExtensionFromMimeType(Option(filePart.getContentType)), meta)
+    val extensionOptions = List(
+      Option(FilenameUtils.getExtension(filePart.getFilename)),
+      getExtensionFromMimeType(Option(filePart.getContentType))
+    )
+    val ext = extensionOptions.collectFirst { case Some(x) => x }
+    put(filePart.getFile, source, None, ext, meta)
   }
 
   /**
@@ -101,7 +109,12 @@ object Res {
    */
   @throws(classOf[IllegalArgumentException])
   def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String, meta: Seq[String]): String = {
-    put(filePart.ref.file, source, None, getExtensionFromMimeType(filePart.contentType), meta)
+    val extensionOptions = List(
+      Option(FilenameUtils.getExtension(filePart.filename)),
+      getExtensionFromMimeType(filePart.contentType)
+    )
+    val ext = extensionOptions.collectFirst { case Some(x) => x }
+    put(filePart.ref.file, source, None, ext, meta)
   }
 
   /**
