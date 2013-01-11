@@ -14,7 +14,7 @@ object Plugin extends Build {
 
   lazy val res = play.Project(pluginName, pluginVersion, pluginDependencies, settings = Defaults.defaultSettings ++ Publish.settings ++ Ls.settings)
     .settings(
-      crossScalaVersions := Seq("2.9.1", "2.10.0-RC1"),
+      crossScalaVersions := Seq("2.9.1", "2.10.0"),
       organization := "se.digiplant",
       playPlugin := true,
       shellPrompt := ShellPrompt.buildShellPrompt,
