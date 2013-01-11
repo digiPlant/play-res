@@ -47,11 +47,11 @@ public class Res {
     }
 
     public static String put(File file, String source, String filename) {
-        return put(file, source, filename, "", emptyList);
+        return put(file, source, filename, null, emptyList);
     }
 
     public static String put(File file, String source) {
-        return put(file, source, "");
+        return put(file, source, null);
     }
 
     public static String put(File file) {
