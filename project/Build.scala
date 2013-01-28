@@ -5,7 +5,7 @@ import play.Project._
 object Plugin extends Build {
 
   val pluginName = "play-res"
-  val pluginVersion = "0.2-SNAPSHOT"
+  val pluginVersion = "1.0"
 
   val pluginDependencies = Seq(
     "commons-io" % "commons-io" % "2.4",
@@ -17,6 +17,7 @@ object Plugin extends Build {
       crossScalaVersions := Seq("2.9.1", "2.10.0"),
       organization := "se.digiplant",
       playPlugin := true,
+      scalacOptions ++= Seq("-unchecked", "-deprecation"/*, "-feature" only works in 2.10*/),
       shellPrompt := ShellPrompt.buildShellPrompt,
       resolvers += Resolver.sonatypeRepo("releases"),
 
@@ -40,7 +41,13 @@ object Plugin extends Build {
 object Publish {
   lazy val settings = Seq(
     publishMavenStyle := true,
-    publishTo <<= version((v: String) => Some(Resolver.sonatypeRepo(if (v.trim.endsWith("SNAPSHOT")) "snapshots" else "releases"))),
+    publishTo <<= version { (v: String) =>
+      val nexus = "https://oss.sonatype.org/"
+      if (v.trim.endsWith("SNAPSHOT"))
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    },
     publishArtifact in Test := false,
     pomIncludeRepository := { _ => false },
     licenses := Seq("Apache 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
