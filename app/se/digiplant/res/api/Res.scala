@@ -15,7 +15,7 @@ object Res {
   lazy val sources: Map[String, File] = configuration.subKeys.map {
     sourceKey =>
       val path = configuration.getString(sourceKey).getOrElse(throw configuration.reportError("res." + sourceKey, "Missing res path[" + sourceKey + "]"))
-      val file = Play.getFile(path)
+      val file = new File(FilenameUtils.concat(Play.current.path.getAbsolutePath, path))
       if (file.isDirectory && !file.exists()) {
         FileUtils.forceMkdir(file)
       }
