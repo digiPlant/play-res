@@ -63,8 +63,10 @@ object Res {
     require(ext.isDefined, "file must have extension or extension must be specified ["+ file.getName +"]")
     require(sources.get(source).isDefined, "Source: " + source + " doesn't exist, make sure you have specified it in conf/application.conf.")
 
-    val name = filename.map(FilenameUtils.getBaseName(_)).getOrElse(DigestUtils.shaHex(new FileInputStream(file)))
-
+    val fis = new FileInputStream(file)
+    val name = filename.map(FilenameUtils.getBaseName(_)).getOrElse(DigestUtils.shaHex(fis))
+    fis.close()
+    
     require(name.length > 12, "name must contain atleast 12 chars to be able to be stored properly.")
 
     val dir = sources.get(source).get
