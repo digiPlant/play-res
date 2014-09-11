@@ -4,16 +4,14 @@ It will only store one version of a file since it computes the sha1 hash of the 
 
 ## Add plugin to dependencies
 ```scala
+// in you're build.sbt file
+
 val appDependencies = Seq(
-	"se.digiplant" %% "play-res" % "1.0"
+	"se.digiplant" %% "play-res" % "1.0.3"
 )
 
-val root = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
-  // To simplify the reverse routing we can import the digiPlant namespace
-  templatesImport ++= Seq(
-    "se.digiplant._"
-  )
-)
+// To simplify the reverse routing we can import the digiPlant namespace
+TwirlKeys.templateImports += "se.digiplant._"
 ```
 
 ## Add to `conf/application.conf`
@@ -61,4 +59,18 @@ you will also have to add another route
 
 ```
 GET    /profile/:file      se.digiplant.res.ResAssets.at(file, "profile")
+```
+
+# Build
+To build run
+
+```
+play
+```
+
+# Publish
+
+```
+sbt publishSigned
+sbt sonatypeRelease
 ```

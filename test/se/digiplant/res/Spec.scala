@@ -1,29 +1,29 @@
 package se.digiplant.res
 
-import org.specs2.specification.{BeforeAfterAround, Scope}
-import org.specs2.execute.Result
+import org.specs2.specification._
+import org.specs2.mutable.Around
+import org.specs2.execute.AsResult
 import play.api.test._
 import play.api.test.Helpers._
 import java.io.File
 import org.apache.commons.io.FileUtils
 import util.Random
 
-class ResContext(val app: FakeApplication = new FakeApplication(
-  additionalConfiguration = Map(
-    ("res.default" -> "tmp/default"),
-    ("res.images" -> "tmp/images")
+trait ResContext extends Around with TempFile {
+
+  implicit val app: FakeApplication = new FakeApplication(
+    additionalConfiguration = Map(
+      "res.default" -> "tmp/default",
+      "res.images" -> "tmp/images"
+    )
   )
-)) extends BeforeAfterAround with TempFile {
 
-  implicit val implicitApp = app
+  def around[T : AsResult](t: =>T) = Helpers.running(app) {
+    val result = AsResult.effectively(t)
 
-  def around[T](t: => T)(implicit evidence: (T) => Result) = running(app)(t)
-
-  def before {
-  }
-
-  def after {
     tmp.delete()
+
+    result
   }
 }
 

@@ -1,5 +1,0 @@
-### Changes
-
-* Update to Play 2.1-RC2
-* Force filetype
-* Documentation fixes

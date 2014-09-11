@@ -36,7 +36,7 @@ object Res {
         else {
           val name = FilenameUtils.getBaseName(fileuid)
           val ext = FilenameUtils.getExtension(fileuid)
-          name + meta.mkString(if (!meta.isEmpty) { "_" } else "", "_", ".") + ext
+          name + meta.mkString(if (meta.nonEmpty) { "_" } else "", "_", ".") + ext
         }
       Option(FileUtils.getFile(dir, hashAsDirectories(filename), filename)).filter(_.exists)
     }
@@ -64,7 +64,7 @@ object Res {
     require(sources.get(source).isDefined, "Source: " + source + " doesn't exist, make sure you have specified it in conf/application.conf.")
 
     val fis = new FileInputStream(file)
-    val name = filename.map(FilenameUtils.getBaseName(_)).getOrElse(DigestUtils.shaHex(fis))
+    val name = filename.map(FilenameUtils.getBaseName).getOrElse(DigestUtils.sha1Hex(fis))
     fis.close()
     
     require(name.length > 12, "name must contain atleast 12 chars to be able to be stored properly.")
@@ -76,7 +76,7 @@ object Res {
       base.mkdirs()
     }
 
-    val fileuid = name + meta.mkString(if (!meta.isEmpty) "_" else "", "_", ".") + ext.get
+    val fileuid = name + meta.mkString(if (meta.nonEmpty) "_" else "", "_", ".") + ext.get
     val target = new File(base, fileuid)
 
     if (!target.exists()) {
@@ -126,7 +126,7 @@ object Res {
    * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
    * @return true if file was deleted, false if it failed
    */
-  def delete(fileuid: String, source: String = "default", meta: Seq[String] = Nil): Boolean = get(fileuid, source, meta).map(_.delete()).getOrElse(false)
+  def delete(fileuid: String, source: String = "default", meta: Seq[String] = Nil): Boolean = get(fileuid, source, meta).exists(_.delete())
 
   private def hashAsDirectories(hash: String): String = hash.substring(0, 4) + '/' + hash.substring(4, 8)
 
@@ -140,7 +140,7 @@ object Res {
     val path = FilenameUtils.getPath(filePath)
     val name = FilenameUtils.getBaseName(filePath)
     val ext = FilenameUtils.getExtension(filePath)
-    Play.getExistingFile(path + name + meta.mkString(if (!meta.isEmpty) { "_" } else "", "_", ".") + ext)
+    Play.getExistingFile(path + name + meta.mkString(if (meta.nonEmpty) { "_" } else "", "_", ".") + ext)
   }
 
   /**
@@ -161,7 +161,7 @@ object Res {
       base.mkdirs()
     }
 
-    val targetPath = path + name + meta.mkString(if (!meta.isEmpty) { "_" } else "", "_", ".") + ext
+    val targetPath = path + name + meta.mkString(if (meta.nonEmpty) { "_" } else "", "_", ".") + ext
     val target = Play.getFile(targetPath)
     if (target.exists()) {
       FileUtils.copyFile(file, target)

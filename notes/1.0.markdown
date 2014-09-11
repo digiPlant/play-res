@@ -1,6 +1,0 @@
-### First stable release
-It's been in development since august and is now ready for prime time.
-
-### Changes
-
-* Support files outside of play root
