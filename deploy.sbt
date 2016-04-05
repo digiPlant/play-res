@@ -1,7 +1,5 @@
 import xerial.sbt.Sonatype.SonatypeKeys._
 
-sonatypeSettings
-
 // Workaround for bouncycastle not working with play 2.3
 
 useGpg := true

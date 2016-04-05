@@ -9,18 +9,18 @@ object ResAssetsSpec extends Specification {
   "ResAssets Controller" should {
 
     "return resource" in new ResContext {
-      api.Res.put(testFile)
+      res.put(testFile)
 
-      val result = ResAssets.at("5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg")(FakeRequest())
+      val result = resAssets.at("5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg")(FakeRequest())
 
       status(result) must equalTo(OK)
       contentType(result) must beSome("image/jpeg")
     }
 
     "return resource in supplied source" in new ResContext {
-      api.Res.put(testFile, "images")
+      res.put(testFile, "images")
 
-      val result = ResAssets.at("5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg", "images")(FakeRequest())
+      val result = resAssets.at("5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg", "images")(FakeRequest())
 
       status(result) must equalTo(OK)
       contentType(result) must beSome("image/jpeg")

@@ -1,21 +1,95 @@
 package se.digiplant.res.api
 
+import javax.inject.{Singleton, Inject}
+
 import play.api._
 import libs.{Files, MimeTypes}
 import java.io.{FileInputStream, File}
 import org.apache.commons.io.{FilenameUtils, FileUtils}
 import org.apache.commons.codec.digest.DigestUtils
 
-import play.api.Play.current
+trait Res {
 
-object Res {
+  /**
+   * Retrieves a file with the specified fileuid and if specified all meta attributes
+   * @param fileuid The SHA1 filename with the extension, it can also include the meta if you don't want to specify it separately
+   * @param source The configured source name
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @return Option[File]
+   */
+  def get(fileuid: String, source: String = "default", meta: Seq[String] = Nil): Option[File]
 
-  lazy val configuration = Play.configuration.getConfig("res").getOrElse(Configuration.empty)
+  /**
+   * Puts a file into the supplied source
+   * @param file A file to be stored
+   * @param source The configured source name
+   * @param filename Override the sha1 checksum generated filename
+   * @param extension The extension of the file
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @throws java.lang.IllegalArgumentException
+   * @return The unique file name with the metadata appended
+   */
+  @throws(classOf[IllegalArgumentException])
+  def put(file: File, source: String = "default", filename: Option[String] = None, extension: Option[String] = None, meta: Seq[String] = Nil): String
+
+  /**
+   * Puts a filePart into the supplied source and tries to figure out it's correct mimetype and extension (Java version)
+   * @param filePart A filePart that's been uploaded to play to be stored
+   * @param source The configured source name
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @throws java.lang.IllegalArgumentException
+   * @return The unique file name with the metadata appended
+   */
+  @throws(classOf[IllegalArgumentException])
+  def put(filePart: play.mvc.Http.MultipartFormData.FilePart[File], source: String, meta: Seq[String]): String
+
+  /**
+   * Puts a filePart into the supplied source and tries to figure out it's correct mimetype and extension
+   * @param filePart A filePart that's been uploaded to play to be stored
+   * @param source The configured source name
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @throws java.lang.IllegalArgumentException
+   * @return The unique file name with the metadata appended
+   */
+  @throws(classOf[IllegalArgumentException])
+  def put(filePart: play.api.mvc.MultipartFormData.FilePart[Files.TemporaryFile], source: String, meta: Seq[String]): String
+
+  /**
+   * Deletes a file with the specified fileuid
+   * @param fileuid The SHA1 filename with the extension, it can also include the meta if you don't want to specify it separately
+   * @param source The configured source name
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @return true if file was deleted, false if it failed
+   */
+  def delete(fileuid: String, source: String = "default", meta: Seq[String] = Nil): Boolean
+
+  /**
+   * Retrieves a file with the specified filepath and if specified all meta attributes
+   * @param filePath The filepath relative to the play app, it can also include the meta if you don't want to specify it separately
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @return Option[File]
+   */
+  def fileWithMeta(filePath: String, meta: Seq[String] = Nil): Option[File]
+
+  /**
+   * Puts a file into the supplied source
+   * @param file A file to be stored
+   * @param filePath The filepath relative to the play app
+   * @param meta A list of meta data you want to append to the filename, they are separated by _ so don't use that in the meta names
+   * @return The unique filePath with the metadata appended
+   */
+  def saveWithMeta(file: File, filePath: String, meta: Seq[String] = Nil): String
+}
+
+@Singleton
+class ResImpl @Inject()(application: Application) extends Res {
+
+  lazy val configuration = application.configuration.getConfig("res").getOrElse(Configuration.empty)
 
   lazy val sources: Map[String, File] = configuration.subKeys.map {
     sourceKey =>
       val path = configuration.getString(sourceKey).getOrElse(throw configuration.reportError("res." + sourceKey, "Missing res path[" + sourceKey + "]"))
-      val file = new File(FilenameUtils.concat(Play.current.path.getAbsolutePath, path))
+      val file = new File(FilenameUtils.concat(application.path.getAbsolutePath, path))
       if (file.isDirectory && !file.exists()) {
         FileUtils.forceMkdir(file)
       }
@@ -93,7 +167,7 @@ object Res {
    * @return The unique file name with the metadata appended
    */
   @throws(classOf[IllegalArgumentException])
-  def put(filePart: play.mvc.Http.MultipartFormData.FilePart, source: String, meta: Seq[String]): String = {
+  def put(filePart: play.mvc.Http.MultipartFormData.FilePart[File], source: String, meta: Seq[String]): String = {
     val extensionOptions = List(
       Option(FilenameUtils.getExtension(filePart.getFilename)),
       getExtensionFromMimeType(Option(filePart.getContentType))
@@ -140,7 +214,7 @@ object Res {
     val path = FilenameUtils.getPath(filePath)
     val name = FilenameUtils.getBaseName(filePath)
     val ext = FilenameUtils.getExtension(filePath)
-    Play.getExistingFile(path + name + meta.mkString(if (meta.nonEmpty) { "_" } else "", "_", ".") + ext)
+    application.getExistingFile(path + name + meta.mkString(if (meta.nonEmpty) { "_" } else "", "_", ".") + ext)
   }
 
   /**
@@ -156,13 +230,13 @@ object Res {
     val name = FilenameUtils.getBaseName(filePath)
     val ext = FilenameUtils.getExtension(filePath)
 
-    val base = Play.getFile(path)
+    val base = application.getFile(path)
     if (!base.exists()) {
       base.mkdirs()
     }
 
     val targetPath = path + name + meta.mkString(if (meta.nonEmpty) { "_" } else "", "_", ".") + ext
-    val target = Play.getFile(targetPath)
+    val target = application.getFile(targetPath)
     if (target.exists()) {
       FileUtils.copyFile(file, target)
     } else {

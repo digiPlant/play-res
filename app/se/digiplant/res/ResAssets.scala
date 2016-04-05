@@ -1,5 +1,7 @@
 package se.digiplant.res
 
+import javax.inject.{Singleton, Inject}
+
 import play.api._
 import play.api.mvc._
 import play.api.libs._
@@ -8,9 +10,8 @@ import org.joda.time.DateTimeZone
 import collection.JavaConverters._
 import java.io.File
 
-import play.api.Play.current
-
-object ResAssets extends Controller {
+@Singleton
+class ResAssets @Inject()(environment: Environment, res: api.Res) extends Controller {
 
   private val timeZoneCode = "GMT"
 
@@ -40,7 +41,7 @@ object ResAssets extends Controller {
       }
     }
 
-    api.Res.get(file, source).map { file =>
+    res.get(file, source).map { file =>
       request.headers.get(IF_NONE_MATCH).flatMap {
         ifNoneMatch =>
           etagFor(file).filter(_ == ifNoneMatch)
@@ -62,13 +63,6 @@ object ResAssets extends Controller {
 
           // Add Cache directive if configured
 
-          /*val cachedResponse = lastModifiedResponse.withHeaders(CACHE_CONTROL -> {
-            Play.mode match {
-              case Mode.Prod => Play.configuration.getString("assets.defaultCache").getOrElse("max-age=3600")
-              case _ => "no-cache"
-            })
-          })*/
-
           lastModifiedResponse
 
         }: Result
@@ -82,7 +76,7 @@ object ResAssets extends Controller {
   private val lastModifieds = (new java.util.concurrent.ConcurrentHashMap[String, String]()).asScala
 
   private def lastModifiedFor(file: File): Option[String] = {
-    lastModifieds.get(file.getName).filter(_ => Play.mode == Mode.Prod).orElse {
+    lastModifieds.get(file.getName).filter(_ => environment.mode == Mode.Prod).orElse {
       val lastModified = df.print({
         new java.util.Date(file.lastModified).getTime
       })
@@ -95,7 +89,7 @@ object ResAssets extends Controller {
   private val etags = (new java.util.concurrent.ConcurrentHashMap[String, String]()).asScala
 
   private def etagFor(file: File): Option[String] = {
-    etags.get(file.getName).filter(_ => Play.mode == Mode.Prod).orElse {
+    etags.get(file.getName).filter(_ => environment.mode == Mode.Prod).orElse {
       val maybeEtag = lastModifiedFor(file).map(_ + " -> " + file.getName).map("\"" + Codecs.sha1(_) + "\"")
       maybeEtag.foreach(etags.put(file.getName, _))
       maybeEtag
