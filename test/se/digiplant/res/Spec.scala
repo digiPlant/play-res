@@ -14,11 +14,15 @@ import util.Random
 
 trait ResContext extends Around with TempFile with Mockito with MustThrownExpectations {
 
-  implicit val app: Application = new GuiceApplicationBuilder(
-    configuration = Configuration("res.default" -> "tmp/default", "res.images" -> "tmp/images")
-  ).build
+  val environment = Environment.simple()
+  val configuration = Configuration("res.default" -> "tmp/default", "res.images" -> "tmp/images")
 
-  val res = new api.ResImpl(app)
+  implicit val app: Application = new GuiceApplicationBuilder()
+    .configure(configuration)
+    .in(environment)
+    .build
+
+  val res = new api.ResImpl(environment, configuration)
   val resAssets = new ResAssets(mock[Environment], res)
 
   def around[T : AsResult](t: =>T) = Helpers.running(app) {
