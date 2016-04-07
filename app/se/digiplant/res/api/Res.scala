@@ -82,14 +82,14 @@ trait Res {
 }
 
 @Singleton
-class ResImpl @Inject()(application: Application) extends Res {
+class ResImpl @Inject()(environment: Environment, configuration: Configuration) extends Res {
 
-  lazy val configuration = application.configuration.getConfig("res").getOrElse(Configuration.empty)
+  lazy val config = configuration.getConfig("res").getOrElse(Configuration.empty)
 
-  lazy val sources: Map[String, File] = configuration.subKeys.map {
+  lazy val sources: Map[String, File] = config.subKeys.map {
     sourceKey =>
-      val path = configuration.getString(sourceKey).getOrElse(throw configuration.reportError("res." + sourceKey, "Missing res path[" + sourceKey + "]"))
-      val file = new File(FilenameUtils.concat(application.path.getAbsolutePath, path))
+      val path = config.getString(sourceKey).getOrElse(throw config.reportError("res." + sourceKey, "Missing res path[" + sourceKey + "]"))
+      val file = new File(FilenameUtils.concat(environment.rootPath.getAbsolutePath, path))
       if (file.isDirectory && !file.exists()) {
         FileUtils.forceMkdir(file)
       }
@@ -214,7 +214,7 @@ class ResImpl @Inject()(application: Application) extends Res {
     val path = FilenameUtils.getPath(filePath)
     val name = FilenameUtils.getBaseName(filePath)
     val ext = FilenameUtils.getExtension(filePath)
-    application.getExistingFile(path + name + meta.mkString(if (meta.nonEmpty) { "_" } else "", "_", ".") + ext)
+    environment.getExistingFile(path + name + meta.mkString(if (meta.nonEmpty) { "_" } else "", "_", ".") + ext)
   }
 
   /**
@@ -230,13 +230,13 @@ class ResImpl @Inject()(application: Application) extends Res {
     val name = FilenameUtils.getBaseName(filePath)
     val ext = FilenameUtils.getExtension(filePath)
 
-    val base = application.getFile(path)
+    val base = environment.getFile(path)
     if (!base.exists()) {
       base.mkdirs()
     }
 
     val targetPath = path + name + meta.mkString(if (meta.nonEmpty) { "_" } else "", "_", ".") + ext
-    val target = application.getFile(targetPath)
+    val target = environment.getFile(targetPath)
     if (target.exists()) {
       FileUtils.copyFile(file, target)
     } else {
