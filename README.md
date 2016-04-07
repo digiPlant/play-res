@@ -23,11 +23,11 @@ res.default=res/default
 
 ## Add to `conf/routes`
 ```
-GET    /res/:file      se.digiplant.res.ResAssets.at(file)
+GET    /res/:file      @se.digiplant.res.ResAssets.at(file)
 
 # If you wan't to separate your resources into separate sources, you can add multiple routes
 
-GET    /images/:file      se.digiplant.res.ResAssets.at(file, "images")
+GET    /images/:file      @se.digiplant.res.ResAssets.at(file, "images")
 
 ```
 
@@ -58,7 +58,7 @@ res.profile=res/profile
 you will also have to add another route
 
 ```
-GET    /profile/:file      se.digiplant.res.ResAssets.at(file, "profile")
+GET    /profile/:file      @se.digiplant.res.ResAssets.at(file, "profile")
 ```
 
 # Build
