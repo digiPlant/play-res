@@ -1,22 +1,29 @@
 package se.digiplant.res
 
+import org.specs2.matcher.MustThrownExpectations
+import org.specs2.mock.Mockito
 import org.specs2.specification._
 import org.specs2.mutable.Around
 import org.specs2.execute.AsResult
+import play.api.{Environment, Application, Configuration}
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test._
-import play.api.test.Helpers._
 import java.io.File
 import org.apache.commons.io.FileUtils
 import util.Random
 
-trait ResContext extends Around with TempFile {
+trait ResContext extends Around with TempFile with Mockito with MustThrownExpectations {
 
-  implicit val app: FakeApplication = new FakeApplication(
-    additionalConfiguration = Map(
-      "res.default" -> "tmp/default",
-      "res.images" -> "tmp/images"
-    )
-  )
+  val environment = Environment.simple()
+  val configuration = Configuration("res.default" -> "tmp/default", "res.images" -> "tmp/images")
+
+  implicit val app: Application = new GuiceApplicationBuilder()
+    .configure(configuration)
+    .in(environment)
+    .build
+
+  val res = new api.ResImpl(environment, configuration)
+  val resAssets = new ResAssets(mock[Environment], res)
 
   def around[T : AsResult](t: =>T) = Helpers.running(app) {
     val result = AsResult.effectively(t)
