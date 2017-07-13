@@ -1,3 +1,6 @@
+# 1.2.0
+ * Play 2.5 support
+
 # 1.1.0
 
  * Play 2.3.4 support

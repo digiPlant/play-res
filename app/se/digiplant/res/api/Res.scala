@@ -202,7 +202,7 @@ class ResImpl @Inject()(environment: Environment, configuration: Configuration) 
    */
   def delete(fileuid: String, source: String = "default", meta: Seq[String] = Nil): Boolean = get(fileuid, source, meta).exists(_.delete())
 
-  private def hashAsDirectories(hash: String): String = hash.substring(0, 4) + '/' + hash.substring(4, 8)
+  private def hashAsDirectories(hash: String): String = hash.substring(0, 4) + File.separator + hash.substring(4, 8)
 
   /**
    * Retrieves a file with the specified filepath and if specified all meta attributes

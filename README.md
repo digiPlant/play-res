@@ -7,7 +7,7 @@ It will only store one version of a file since it computes the sha1 hash of the 
 // in you're build.sbt file
 
 val appDependencies = Seq(
-	"se.digiplant" %% "play-res" % "1.1.1"
+	"se.digiplant" %% "play-res" % "1.2.0"
 )
 
 // To simplify the reverse routing we can import the digiPlant namespace
