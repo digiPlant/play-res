@@ -14,7 +14,7 @@ object ResAssetsSpec extends Specification {
       val result = resAssets.at("5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg")(FakeRequest())
 
       status(result) must equalTo(OK)
-      contentType(result) must beSome("image/jpeg")
+      contentType(result) must beSome("application/octet-stream")
     }
 
     "return resource in supplied source" in new ResContext {
@@ -23,7 +23,7 @@ object ResAssetsSpec extends Specification {
       val result = resAssets.at("5564ac5e3968e77b4022f55a23d36630bdeb0274.jpg", "images")(FakeRequest())
 
       status(result) must equalTo(OK)
-      contentType(result) must beSome("image/jpeg")
+      contentType(result) must beSome("application/octet-stream")
     }
   }
 }

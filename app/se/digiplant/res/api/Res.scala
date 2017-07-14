@@ -3,10 +3,12 @@ package se.digiplant.res.api
 import javax.inject.{Singleton, Inject}
 
 import play.api._
-import libs.{Files, MimeTypes}
+import libs.Files
 import java.io.{FileInputStream, File}
-import org.apache.commons.io.{FilenameUtils, FileUtils}
+
+import org.apache.commons.io.{FileUtils, FilenameUtils}
 import org.apache.commons.codec.digest.DigestUtils
+import play.api.http.FileMimeTypes
 
 trait Res {
 
@@ -82,13 +84,13 @@ trait Res {
 }
 
 @Singleton
-class ResImpl @Inject()(environment: Environment, configuration: Configuration) extends Res {
+class ResImpl @Inject()(environment: Environment, configuration: Configuration, mimeTypes: FileMimeTypes) extends Res {
 
-  lazy val config = configuration.getConfig("res").getOrElse(Configuration.empty)
+  lazy val config: Configuration = configuration.getOptional[Configuration]("res").getOrElse(Configuration.empty)
 
   lazy val sources: Map[String, File] = config.subKeys.map {
     sourceKey =>
-      val path = config.getString(sourceKey).getOrElse(throw config.reportError("res." + sourceKey, "Missing res path[" + sourceKey + "]"))
+      val path = config.getOptional[String](sourceKey).getOrElse(throw config.reportError("res." + sourceKey, "Missing res path[" + sourceKey + "]"))
       val file = new File(FilenameUtils.concat(environment.rootPath.getAbsolutePath, path))
       if (file.isDirectory && !file.exists()) {
         FileUtils.forceMkdir(file)
@@ -143,7 +145,7 @@ class ResImpl @Inject()(environment: Environment, configuration: Configuration) 
     
     require(name.length > 12, "name must contain atleast 12 chars to be able to be stored properly.")
 
-    val dir = sources.get(source).get
+    val dir = sources(source)
 
     val base = new File(dir, hashAsDirectories(name))
     if (!base.exists()) {
@@ -190,7 +192,7 @@ class ResImpl @Inject()(environment: Environment, configuration: Configuration) 
       getExtensionFromMimeType(filePart.contentType)
     )
     val ext = extensionOptions.collectFirst { case Some(x) => x }
-    put(filePart.ref.file, source, None, ext, meta)
+    put(filePart.ref, source, None, ext, meta)
   }
 
   /**
@@ -257,6 +259,6 @@ class ResImpl @Inject()(environment: Environment, configuration: Configuration) 
     case Some("image/jpeg") => Some("jpg")
     case Some("image/png") => Some("png")
     case Some("image/gif") => Some("gif")
-    case Some(m) => MimeTypes.types.map(_.swap).get(m)
+    case Some(m) => mimeTypes.forFileName(m)
   }
 }

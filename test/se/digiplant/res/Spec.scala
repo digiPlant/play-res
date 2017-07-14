@@ -5,14 +5,18 @@ import org.specs2.mock.Mockito
 import org.specs2.specification._
 import org.specs2.mutable.Around
 import org.specs2.execute.AsResult
-import play.api.{Environment, Application, Configuration}
+import play.api.{Application, Configuration, Environment}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test._
 import java.io.File
+
 import org.apache.commons.io.FileUtils
+import play.api.http.FileMimeTypes
+
+import scala.concurrent.ExecutionContext
 import util.Random
 
-trait ResContext extends Around with TempFile with Mockito with MustThrownExpectations {
+trait ResContext extends Around with TempFile with Mockito with MustThrownExpectations with Injecting {
 
   val environment = Environment.simple()
   val configuration = Configuration("res.default" -> "tmp/default", "res.images" -> "tmp/images")
@@ -22,8 +26,10 @@ trait ResContext extends Around with TempFile with Mockito with MustThrownExpect
     .in(environment)
     .build
 
-  val res = new api.ResImpl(environment, configuration)
-  val resAssets = new ResAssets(mock[Environment], res)
+  implicit val executionContext = inject[ExecutionContext]
+
+  val res = new api.ResImpl(environment, configuration, mock[FileMimeTypes])
+  val resAssets = new ResAssets(Helpers.stubControllerComponents(), mock[Environment], res)
 
   def around[T : AsResult](t: =>T) = Helpers.running(app) {
     val result = AsResult.effectively(t)

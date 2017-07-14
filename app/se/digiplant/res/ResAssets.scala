@@ -1,17 +1,21 @@
 package se.digiplant.res
 
-import javax.inject.{Singleton, Inject}
+import javax.inject.{Inject, Singleton}
 
 import play.api._
 import play.api.mvc._
 import play.api.libs._
-import org.joda.time.format.{DateTimeFormatter, DateTimeFormat}
+import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 import org.joda.time.DateTimeZone
+
 import collection.JavaConverters._
 import java.io.File
 
+import scala.concurrent.ExecutionContext
+
 @Singleton
-class ResAssets @Inject()(environment: Environment, res: api.Res) extends Controller {
+class ResAssets @Inject()(components: ControllerComponents, environment: Environment, res: api.Res)
+                         (implicit ec: ExecutionContext) extends AbstractController(components) {
 
   private val timeZoneCode = "GMT"
 
@@ -29,7 +33,7 @@ class ResAssets @Inject()(environment: Environment, res: api.Res) extends Contro
 
   private val parsableTimezoneCode = " " + timeZoneCode
 
-  def at(file: String, source: String = "default"): Action[AnyContent] = Action { request =>
+  def at(file: String, source: String = "default"): Action[AnyContent] = Action { request: RequestHeader =>
 
     def parseDate(date: String): Option[java.util.Date] = {
       try {

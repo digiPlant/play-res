@@ -2,10 +2,11 @@ package se.digiplant.res.api
 
 import se.digiplant.res.ResContext
 import org.specs2.mutable.Specification
-import java.io.{FileInputStream, File}
+import java.io.{File, FileInputStream}
+
 import org.apache.commons.io.IOUtils
 import play.api._
-import libs.Files.TemporaryFile
+import libs.Files.SingletonTemporaryFileCreator
 import play.api.mvc.MultipartFormData.FilePart
 
 object ResSpec extends Specification {
@@ -33,13 +34,13 @@ object ResSpec extends Specification {
     }
 
     "put a scala filepart" in new ResContext {
-      val f = FilePart("testPart", "filename", Some("image/jpeg"), TemporaryFile(testFile))
+      val f = FilePart("testPart", "filename", Some("image/jpeg"), SingletonTemporaryFileCreator.create(testFile.toPath))
       val fileuid = res.put(f, "default", Seq.empty)
       fileuid must not beEmpty
     }
 
     "put a scala filepart with no extension" in new ResContext {
-      val f = FilePart("testPart", "filename", Some("image/jpeg"), TemporaryFile(anonymousTestFile))
+      val f = FilePart("testPart", "filename", Some("image/jpeg"), SingletonTemporaryFileCreator.create(anonymousTestFile.toPath))
       val fileuid = res.put(f, "default", Seq.empty)
       fileuid must not beEmpty
     }
